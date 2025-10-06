@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-Paper Image Converter</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #preview { max-width: 100%; margin: 20px 0; }
+        #status { margin: 20px 0; padding: 10px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>E-Paper Image Converter</h1>
+    
+    <div class="upload-area">
+        <input type="file" id="imageFile" accept="image/*">
+        <br><br>
+        <button onclick="uploadImage()">Convert & Display</button>
+    </div>
+    
+    <img id="preview" style="display:none;">
+    <div id="status"></div>
+    
+    <script>
+        document.getElementById('imageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('preview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        async function uploadImage() {
+            const fileInput = document.getElementById('imageFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const status = document.getElementById('status');
+            status.textContent = 'Converting and sending to display...';
+            status.className = '';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    status.textContent = result.message;
+                    status.className = 'success';
+                } else {
+                    status.textContent = 'Error: ' + result.error;
+                    status.className = 'error';
+                }
+            } catch (e) {
+                status.textContent = 'Error: ' + e.message;
+                status.className = 'error';
+            }
+        }
+    </script>
+</body>
+</html>
